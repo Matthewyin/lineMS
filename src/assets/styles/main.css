@@ -1,25 +1,6 @@
-<template>
-  <div class="app">
-    <app-header />
-    <div class="main-content">
-      <router-view />
-    </div>
-  </div>
-</template>
-
-<script>
-import AppHeader from './components/AppHeader.vue';
-
-export default {
-  name: 'App',
-  components: {
-    AppHeader
-  }
-}
-</script>
-
-<style>
+/* 全局样式 */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
   --primary: #6200ee;
@@ -49,20 +30,7 @@ body {
   color: var(--on-background);
 }
 
-.app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
+/* 通用样式 */
 .card {
   background-color: var(--surface);
   border-radius: 4px;
@@ -207,4 +175,12 @@ select.form-control {
     grid-template-columns: 1fr;
   }
 }
-</style>
+
+/* 文本颜色 */
+.text-positive {
+  color: #4caf50;
+}
+
+.text-negative {
+  color: #f44336;
+}

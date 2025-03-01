@@ -1,14 +1,12 @@
-import { createStore } from 'vuex'
+import { createStore } from 'vuex';
+import dataModule from './modules/data';
+import filterModule from './modules/filter';
+import settingsModule from './modules/settings';
 
 export default createStore({
-  state: {
-  },
-  getters: {
-  },
-  mutations: {
-  },
-  actions: {
-  },
   modules: {
+    data: dataModule,
+    filter: filterModule,
+    settings: settingsModule
   }
-})
+});
