@@ -31,13 +31,13 @@ export default {
     return {
       filters: {},
       tableColumns: [
-        { key: 'isp', label: 'ISP', sortable: true },
+        { key: 'ISP', label: 'ISP', sortable: true },
         { key: 'payer', label: 'Payer', sortable: true },
         { key: 'local', label: 'Local', sortable: true },
         { key: 'remote', label: 'Remote', sortable: true },
         { key: 'purpose', label: 'Purpose', sortable: true },
-        { key: 'bandwidth', label: '带宽', sortable: true },
-        { key: 'cost', label: '费用', sortable: true }
+        { key: 'count', label: '带宽', sortable: true },
+        { key: 'cost_year', label: '费用', sortable: true }
       ]
     };
   },

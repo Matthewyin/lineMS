@@ -6,9 +6,9 @@
         <div class="form-group">
           <label class="form-label">ISP</label>
           <div class="select-wrapper">
-            <select v-model="filters.isp" class="form-control" @change="applyFilters">
+            <select v-model="filters.ISP" class="form-control" @change="applyFilters">
               <option value="">全部</option>
-              <option v-for="option in filterOptions.isp" :key="option" :value="option">
+              <option v-for="option in filterOptions.ISP" :key="option" :value="option">
                 {{ option }}
               </option>
             </select>
@@ -100,7 +100,7 @@ export default {
   data() {
     return {
       filters: {
-        isp: '',
+        ISP: '',
         payer: '',
         local: '',
         remote: '',
@@ -112,7 +112,7 @@ export default {
     filterOptions() {
       // 从数据中提取筛选选项
       const options = {
-        isp: [],
+        ISP: [],
         payer: [],
         local: [],
         remote: [],
@@ -120,8 +120,8 @@ export default {
       };
       
       this.data.forEach(item => {
-        if (item.isp && !options.isp.includes(item.isp)) {
-          options.isp.push(item.isp);
+        if (item.ISP && !options.ISP.includes(item.ISP)) {
+          options.ISP.push(item.ISP);
         }
         if (item.payer && !options.payer.includes(item.payer)) {
           options.payer.push(item.payer);
