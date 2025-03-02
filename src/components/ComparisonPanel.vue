@@ -4,17 +4,6 @@
     
     <div class="comparison-filters">
       <div class="form-group">
-        <label class="form-label">对比字段</label>
-        <div class="select-wrapper">
-          <select v-model="compareField" class="form-control" @change="updateComparison">
-            <option v-for="field in compareFields" :key="field.key" :value="field.key">
-              {{ field.label }}
-            </option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="form-group">
         <label class="form-label">分组字段</label>
         <div class="select-wrapper">
           <select v-model="groupField" class="form-control" @change="updateComparison">
@@ -26,68 +15,56 @@
       </div>
     </div>
     
-    <div class="comparison-chart-container">
-      <div v-if="loading" class="chart-loading">
-        <div class="spinner"></div>
-        <p>加载中...</p>
-      </div>
-      
-      <div v-else-if="!hasData" class="chart-no-data">
-        <p>没有符合条件的数据</p>
-      </div>
-      
-      <div v-else class="chart-wrapper">
-        <canvas ref="comparisonChart"></canvas>
-      </div>
-    </div>
+    <!-- 图表组件 -->
+    <comparison-chart
+      :chart-data="chartData"
+      :comparison-data="comparisonData"
+      :current-year="currentYear"
+      :next-year="nextYear"
+      :group-field="groupField"
+      :compare-field="compareField"
+      :loading="loading"
+      :has-data="hasData"
+      @chart-element-click="$emit('chart-element-click', $event)"
+    />
     
-    <div class="comparison-table-container" v-if="hasData && !loading">
-      <table class="comparison-table">
-        <thead>
-          <tr>
-            <th>{{ getFieldLabel(groupField) }}</th>
-            <th>2025年 {{ getFieldLabel(compareField) }}</th>
-            <th>2026年 {{ getFieldLabel(compareField) }}</th>
-            <th>差异</th>
-            <th>变化率</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, key) in comparisonData" :key="key">
-            <td>{{ key }}</td>
-            <td>{{ formatValue(item.data2025) }}</td>
-            <td>{{ formatValue(item.data2026) }}</td>
-            <td :class="getDifferenceClass(item.difference)">
-              {{ formatDifference(item.difference) }}
-            </td>
-            <td :class="getDifferenceClass(item.percentChange)">
-              {{ formatPercentage(item.percentChange) }}
-            </td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr>
-            <td><strong>总计</strong></td>
-            <td><strong>{{ formatValue(totals.total2025) }}</strong></td>
-            <td><strong>{{ formatValue(totals.total2026) }}</strong></td>
-            <td :class="getDifferenceClass(totals.totalDifference)">
-              <strong>{{ formatDifference(totals.totalDifference) }}</strong>
-            </td>
-            <td :class="getDifferenceClass(totals.totalPercentChange)">
-              <strong>{{ formatPercentage(totals.totalPercentChange) }}</strong>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+    <!-- 汇总表格组件 -->
+    <comparison-summary-table
+      :comparison-data="comparisonData"
+      :totals="totals"
+      :current-year="currentYear"
+      :next-year="nextYear"
+      :group-field="groupField"
+      :loading="loading"
+      :has-data="hasData"
+    />
+    
+    <!-- 变化明细表格组件 -->
+    <comparison-detail-table
+      :data2025="filteredData2025"
+      :data2026="filteredData2026"
+      :current-year="currentYear"
+      :next-year="nextYear"
+      :group-field="groupField"
+      :loading="loading"
+      :has-data="hasData"
+    />
   </div>
 </template>
 
 <script>
-import Chart from 'chart.js/auto';
+import { mapState } from 'vuex';
+import ComparisonChart from './ComparisonChart.vue';
+import ComparisonSummaryTable from './ComparisonSummaryTable.vue';
+import ComparisonDetailTable from './ComparisonDetailTable.vue';
 
 export default {
   name: 'ComparisonPanel',
+  components: {
+    ComparisonChart,
+    ComparisonSummaryTable,
+    ComparisonDetailTable
+  },
   props: {
     data2025: {
       type: Array,
@@ -105,32 +82,37 @@ export default {
   data() {
     return {
       loading: false,
-      compareField: 'cost',
-      groupField: 'isp',
-      comparisonChart: null
+      compareField: 'count',
+      groupField: 'ISP'
     };
   },
   computed: {
+    ...mapState('data', ['currentYear']),
+    nextYear() {
+      return this.currentYear === 2025 ? 2026 : 2025;
+    },
     compareFields() {
       return [
-        { key: 'cost', label: '费用' },
-        { key: 'bandwidth', label: '带宽' }
+        { key: 'count', label: '线路数量' }
       ];
     },
     groupFields() {
       return [
-        { key: 'isp', label: 'ISP' },
-        { key: 'payer', label: 'Payer' },
-        { key: 'local', label: 'Local' },
-        { key: 'remote', label: 'Remote' },
-        { key: 'purpose', label: 'Purpose' }
+        { key: 'ISP', label: '运营商' },
+        { key: 'line_type', label: '线路类型' },
+        { key: 'payer', label: '付费方' },
+        { key: 'local', label: '线路本端' },
+        { key: 'remote', label: '线路对端' },
+        { key: 'purpose', label: '业务用途' }
       ];
     },
     filteredData2025() {
       return this.data2025.filter(item => {
         for (const key in this.filters) {
-          if (this.filters[key] && item[key] !== this.filters[key]) {
-            return false;
+          if (Array.isArray(this.filters[key]) && this.filters[key].length > 0) {
+            if (!this.filters[key].includes(item[key])) {
+              return false;
+            }
           }
         }
         return true;
@@ -139,8 +121,10 @@ export default {
     filteredData2026() {
       return this.data2026.filter(item => {
         for (const key in this.filters) {
-          if (this.filters[key] && item[key] !== this.filters[key]) {
-            return false;
+          if (Array.isArray(this.filters[key]) && this.filters[key].length > 0) {
+            if (!this.filters[key].includes(item[key])) {
+              return false;
+            }
           }
         }
         return true;
@@ -149,45 +133,70 @@ export default {
     comparisonData() {
       const result = {};
       
-      // 处理2025年数据
-      this.filteredData2025.forEach(item => {
+      // 处理第一年数据（当前选择的年份）
+      const firstYearData = this.currentYear === 2025 ? this.filteredData2025 : this.filteredData2026;
+      const secondYearData = this.currentYear === 2025 ? this.filteredData2026 : this.filteredData2025;
+      const firstYearKey = `data${this.currentYear}`;
+      const secondYearKey = `data${this.nextYear}`;
+      const firstYearCostKey = `cost${this.currentYear}`;
+      const secondYearCostKey = `cost${this.nextYear}`;
+      
+      // 处理第一年数据
+      firstYearData.forEach(item => {
         const groupValue = item[this.groupField] || '未分类';
         
         if (!result[groupValue]) {
           result[groupValue] = {
-            data2025: 0,
-            data2026: 0,
+            [firstYearKey]: 0,
+            [secondYearKey]: 0,
             difference: 0,
-            percentChange: 0
+            percentChange: 0,
+            [firstYearCostKey]: parseFloat(item.cost_year || 0),
+            [secondYearCostKey]: 0,
+            costDifference: 0
           };
+        } else {
+          result[groupValue][firstYearCostKey] += parseFloat(item.cost_year || 0);
         }
         
-        result[groupValue].data2025 += parseFloat(item[this.compareField] || 0);
+        // 对于线路数量，每条记录计数为1
+        result[groupValue][firstYearKey] += 1;
       });
       
-      // 处理2026年数据
-      this.filteredData2026.forEach(item => {
+      // 处理第二年数据
+      secondYearData.forEach(item => {
         const groupValue = item[this.groupField] || '未分类';
         
         if (!result[groupValue]) {
           result[groupValue] = {
-            data2025: 0,
-            data2026: 0,
+            [firstYearKey]: 0,
+            [secondYearKey]: 0,
             difference: 0,
-            percentChange: 0
+            percentChange: 0,
+            [firstYearCostKey]: 0,
+            [secondYearCostKey]: parseFloat(item.cost_year || 0),
+            costDifference: 0
           };
+        } else {
+          result[groupValue][secondYearCostKey] += parseFloat(item.cost_year || 0);
         }
         
-        result[groupValue].data2026 += parseFloat(item[this.compareField] || 0);
+        // 对于线路数量，每条记录计数为1
+        result[groupValue][secondYearKey] += 1;
       });
       
       // 计算差异和变化率
       for (const key in result) {
-        result[key].difference = result[key].data2026 - result[key].data2025;
+        // 线路数量差异 (第二年 - 第一年)
+        result[key].difference = result[key][secondYearKey] - result[key][firstYearKey];
         
-        if (result[key].data2025 !== 0) {
-          result[key].percentChange = (result[key].difference / result[key].data2025) * 100;
-        } else if (result[key].data2026 !== 0) {
+        // 费用差异
+        result[key].costDifference = result[key][secondYearCostKey] - result[key][firstYearCostKey];
+        
+        // 变化率（基于线路数量）
+        if (result[key][firstYearKey] !== 0) {
+          result[key].percentChange = (result[key].difference / result[key][firstYearKey]) * 100;
+        } else if (result[key][secondYearKey] !== 0) {
           result[key].percentChange = 100; // 从0增长到非0，变化率为100%
         } else {
           result[key].percentChange = 0; // 两者都为0，变化率为0
@@ -199,13 +208,18 @@ export default {
     totals() {
       let total2025 = 0;
       let total2026 = 0;
+      let totalCost2025 = 0;
+      let totalCost2026 = 0;
       
       for (const key in this.comparisonData) {
         total2025 += this.comparisonData[key].data2025;
         total2026 += this.comparisonData[key].data2026;
+        totalCost2025 += this.comparisonData[key].cost2025;
+        totalCost2026 += this.comparisonData[key].cost2026;
       }
       
       const totalDifference = total2026 - total2025;
+      const totalCostDifference = totalCost2026 - totalCost2025;
       let totalPercentChange = 0;
       
       if (total2025 !== 0) {
@@ -218,6 +232,9 @@ export default {
         total2025,
         total2026,
         totalDifference,
+        totalCost2025,
+        totalCost2026,
+        totalCostDifference,
         totalPercentChange
       };
     },
@@ -225,12 +242,39 @@ export default {
       return Object.keys(this.comparisonData).length > 0;
     },
     chartData() {
-      const labels = Object.keys(this.comparisonData);
-      const data2025 = labels.map(label => this.comparisonData[label].data2025);
-      const data2026 = labels.map(label => this.comparisonData[label].data2026);
+      // 获取所有键
+      const allLabels = Object.keys(this.comparisonData);
+      
+      // 如果没有数据，返回空数组
+      if (allLabels.length === 0) {
+        return {
+          labels: [],
+          data2025: [],
+          data2026: []
+        };
+      }
+      
+      // 过滤掉两年线路数都为0的项目
+      const filteredLabels = allLabels.filter(label => {
+        const item = this.comparisonData[label];
+        return !(item.data2025 === 0 && item.data2026 === 0);
+      });
+      
+      // 如果过滤后没有数据，返回空数组
+      if (filteredLabels.length === 0) {
+        return {
+          labels: [],
+          data2025: [],
+          data2026: []
+        };
+      }
+      
+      // 根据过滤后的标签生成数据
+      const data2025 = filteredLabels.map(label => this.comparisonData[label].data2025);
+      const data2026 = filteredLabels.map(label => this.comparisonData[label].data2026);
       
       return {
-        labels,
+        labels: filteredLabels,
         data2025,
         data2026
       };
@@ -242,13 +286,19 @@ export default {
       handler() {
         this.updateComparison();
       }
+    },
+    compareField() {
+      this.updateComparison();
+    },
+    groupField() {
+      this.updateComparison();
     }
   },
   mounted() {
-    this.updateComparison();
-  },
-  beforeUnmount() {
-    this.destroyChart();
+    // 延迟渲染以确保DOM已完全加载
+    setTimeout(() => {
+      this.updateComparison();
+    }, 300);
   },
   methods: {
     updateComparison() {
@@ -256,108 +306,12 @@ export default {
       
       // 延迟一下，让加载状态显示出来
       setTimeout(() => {
-        this.renderComparisonChart();
         this.loading = false;
       }, 300);
-    },
-    destroyChart() {
-      if (this.comparisonChart) {
-        this.comparisonChart.destroy();
-        this.comparisonChart = null;
-      }
-    },
-    renderComparisonChart() {
-      this.destroyChart();
-      
-      if (!this.hasData) return;
-      
-      const ctx = this.$refs.comparisonChart.getContext('2d');
-      
-      this.comparisonChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: this.chartData.labels,
-          datasets: [
-            {
-              label: '2025年',
-              data: this.chartData.data2025,
-              backgroundColor: 'rgba(54, 162, 235, 0.7)',
-              borderColor: 'rgba(54, 162, 235, 1)',
-              borderWidth: 1
-            },
-            {
-              label: '2026年',
-              data: this.chartData.data2026,
-              backgroundColor: 'rgba(255, 99, 132, 0.7)',
-              borderColor: 'rgba(255, 99, 132, 1)',
-              borderWidth: 1
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'top'
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const label = context.dataset.label || '';
-                  const value = context.raw;
-                  return `${label}: ${this.formatValue(value)}`;
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: this.getFieldLabel(this.compareField)
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: this.getFieldLabel(this.groupField)
-              }
-            }
-          }
-        }
-      });
     },
     getFieldLabel(field) {
       const fieldObj = [...this.compareFields, ...this.groupFields].find(f => f.key === field);
       return fieldObj ? fieldObj.label : field;
-    },
-    formatValue(value) {
-      if (this.compareField === 'cost') {
-        return value.toFixed(2);
-      }
-      return value.toString();
-    },
-    formatDifference(value) {
-      if (value > 0) {
-        return `+${this.formatValue(value)}`;
-      }
-      return this.formatValue(value);
-    },
-    formatPercentage(value) {
-      if (value > 0) {
-        return `+${value.toFixed(2)}%`;
-      }
-      return `${value.toFixed(2)}%`;
-    },
-    getDifferenceClass(value) {
-      if (value > 0) {
-        return 'text-positive';
-      } else if (value < 0) {
-        return 'text-negative';
-      }
-      return '';
     }
   }
 }
@@ -372,6 +326,7 @@ export default {
   font-size: 18px;
   font-weight: 500;
   margin-bottom: 16px;
+  color: var(--text-primary);
 }
 
 .comparison-filters {
@@ -384,87 +339,43 @@ export default {
   flex: 1;
 }
 
-.comparison-chart-container {
-  position: relative;
-  height: 400px;
-  margin-bottom: 24px;
-}
-
-.chart-wrapper {
-  height: 100%;
-}
-
-.chart-loading, .chart-no-data {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  border-top-color: var(--primary);
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.comparison-table-container {
-  overflow-x: auto;
-}
-
-.comparison-table {
-  width: 100%;
-  border-collapse: collapse;
+.form-label {
   font-size: 14px;
+  margin-bottom: 8px;
+  display: block;
+  color: var(--text-secondary);
 }
 
-.comparison-table th, .comparison-table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+.select-wrapper {
+  position: relative;
 }
 
-.comparison-table th {
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--divider);
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-size: 14px;
+  appearance: none;
 }
 
-.comparison-table tfoot td {
-  border-top: 2px solid rgba(0, 0, 0, 0.12);
-  font-weight: 500;
-}
-
-.text-positive {
-  color: #4caf50;
-}
-
-.text-negative {
-  color: #f44336;
+.select-wrapper::after {
+  content: '▼';
+  font-size: 12px;
+  color: var(--text-secondary);
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 @media (max-width: 768px) {
   .comparison-filters {
     flex-direction: column;
     gap: 12px;
-  }
-  
-  .comparison-chart-container {
-    height: 300px;
   }
 }
 </style>

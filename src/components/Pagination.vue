@@ -48,7 +48,7 @@
       </button>
     </div>
     <div class="pagination-per-page">
-      <select v-model="itemsPerPage" class="form-control">
+      <select v-model="itemsPerPage" class="form-control" @change="handlePerPageChange">
         <option value="10">10条/页</option>
         <option value="20">20条/页</option>
         <option value="50">50条/页</option>
@@ -126,13 +126,21 @@ export default {
   methods: {
     changePage(page) {
       this.$emit('page-changed', page);
+    },
+    handlePerPageChange() {
+      // 将字符串转换为数字
+      const perPage = parseInt(this.itemsPerPage);
+      this.$emit('update:per-page', perPage);
+      // 切换每页显示数量时，重置到第一页
+      this.$emit('page-changed', 1);
     }
   },
   watch: {
-    itemsPerPage() {
-      this.$emit('update:per-page', this.itemsPerPage);
-      // 切换每页显示数量时，重置到第一页
-      this.$emit('page-changed', 1);
+    perPage: {
+      immediate: true,
+      handler(newValue) {
+        this.itemsPerPage = newValue;
+      }
     }
   }
 }

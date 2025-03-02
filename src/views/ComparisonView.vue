@@ -1,32 +1,23 @@
 <template>
   <div class="comparison-view">
-    <h1 class="page-title">2025年与2026年数据对比</h1>
+    <h1 class="page-title">数据对比</h1>
     
-    <filter-panel 
-      :data="combinedData" 
-      @filter-changed="handleFilterChange"
-    />
-    
-    <comparison-panel 
-      :data2025="data2025"
-      :data2026="data2026"
-      :filters="filters"
-    />
-    
-    <div class="comparison-tables grid-2">
-      <div class="card">
-        <h2 class="table-title">2025年数据</h2>
-        <data-table 
-          :data="filteredData2025" 
-          :columns="tableColumns"
+    <div class="comparison-layout">
+      <!-- 左侧筛选面板 -->
+      <div class="filter-sidebar">
+        <filter-panel 
+          :data="combinedData" 
+          @filter-changed="handleFilterChange"
         />
       </div>
       
-      <div class="card">
-        <h2 class="table-title">2026年数据</h2>
-        <data-table 
-          :data="filteredData2026" 
-          :columns="tableColumns"
+      <!-- 右侧内容区域 -->
+      <div class="content-area">
+        <comparison-panel 
+          :data2025="filteredData2025"
+          :data2026="filteredData2026"
+          :filters="filters"
+          @chart-element-click="handleChartElementClick"
         />
       </div>
     </div>
@@ -34,33 +25,26 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapGetters, mapState } from 'vuex';
 import FilterPanel from '@/components/FilterPanel.vue';
-import DataTable from '@/components/DataTable.vue';
 import ComparisonPanel from '@/components/ComparisonPanel.vue';
+import { compareData } from '@/units/dataProcessor';
 
 export default {
   name: 'ComparisonView',
   components: {
     FilterPanel,
-    DataTable,
     ComparisonPanel
   },
   data() {
     return {
       filters: {},
-      tableColumns: [
-        { key: 'isp', label: 'ISP', sortable: true },
-        { key: 'payer', label: 'Payer', sortable: true },
-        { key: 'local', label: 'Local', sortable: true },
-        { key: 'remote', label: 'Remote', sortable: true },
-        { key: 'purpose', label: 'Purpose', sortable: true },
-        { key: 'bandwidth', label: '带宽', sortable: true },
-        { key: 'cost', label: '费用', sortable: true }
-      ]
+      groupBy: 'ISP',
+      compareField: 'cost_year'
     };
   },
   computed: {
+    ...mapState('data', ['currentYear']),
     ...mapGetters('data', ['data2025', 'data2026']),
     combinedData() {
       return [...this.data2025, ...this.data2026];
@@ -68,8 +52,10 @@ export default {
     filteredData2025() {
       return this.data2025.filter(item => {
         for (const key in this.filters) {
-          if (this.filters[key] && item[key] !== this.filters[key]) {
-            return false;
+          if (Array.isArray(this.filters[key]) && this.filters[key].length > 0) {
+            if (!this.filters[key].includes(item[key])) {
+              return false;
+            }
           }
         }
         return true;
@@ -78,17 +64,33 @@ export default {
     filteredData2026() {
       return this.data2026.filter(item => {
         for (const key in this.filters) {
-          if (this.filters[key] && item[key] !== this.filters[key]) {
-            return false;
+          if (Array.isArray(this.filters[key]) && this.filters[key].length > 0) {
+            if (!this.filters[key].includes(item[key])) {
+              return false;
+            }
           }
         }
         return true;
       });
+    },
+    comparisonData() {
+      return compareData(this.filteredData2025, this.filteredData2026, this.groupBy, this.compareField);
     }
   },
   methods: {
     handleFilterChange(filters) {
       this.filters = filters;
+    },
+    handleGroupByChange(value) {
+      this.groupBy = value;
+    },
+    handleCompareFieldChange(value) {
+      this.compareField = value;
+    },
+    handleChartElementClick(event) {
+      console.log('图表元素被点击:', event);
+      // 这里可以添加更多处理逻辑，例如显示详细信息弹窗
+      // 或者根据点击的元素进行数据筛选等
     }
   }
 }
@@ -106,19 +108,28 @@ export default {
   color: var(--primary);
 }
 
-.comparison-tables {
-  margin-top: 24px;
+.comparison-layout {
+  display: flex;
+  gap: 24px;
 }
 
-.table-title {
-  font-size: 18px;
-  font-weight: 500;
-  margin-bottom: 16px;
+.filter-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.content-area {
+  flex: 1;
+  min-width: 0; /* 防止内容溢出 */
 }
 
 @media (max-width: 1200px) {
-  .grid-2 {
-    grid-template-columns: 1fr;
+  .comparison-layout {
+    flex-direction: column;
+  }
+  
+  .filter-sidebar {
+    width: 100%;
   }
 }
 </style>

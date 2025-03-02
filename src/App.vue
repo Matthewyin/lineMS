@@ -22,19 +22,32 @@ export default {
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
 :root {
-  --primary: #6200ee;
-  --primary-dark: #3700b3;
-  --primary-light: #bb86fc;
+  /* 主题变量 */
+  --primary: #ffffff;
+  --primary-dark: #f0f0f0;
+  --primary-light: #ffffff;
   --secondary: #03dac6;
   --secondary-dark: #018786;
   --background: #f5f5f5;
   --surface: #ffffff;
   --error: #b00020;
-  --on-primary: #ffffff;
+  --success: #4caf50;
+  --warning: #ff9800;
+  --info: #2196f3;
+  --on-primary: #000000;
   --on-secondary: #000000;
   --on-background: #000000;
   --on-surface: #000000;
   --on-error: #ffffff;
+  --on-success: #ffffff;
+  --on-warning: #000000;
+  --on-info: #ffffff;
+  --border-color: rgba(0, 0, 0, 0.12);
+  --text-primary: rgba(0, 0, 0, 0.87);
+  --text-secondary: rgba(0, 0, 0, 0.6);
+  --text-hint: rgba(0, 0, 0, 0.38);
+  --divider: rgba(0, 0, 0, 0.12);
+  --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -47,6 +60,7 @@ body {
   font-family: 'Roboto', sans-serif;
   background-color: var(--background);
   color: var(--on-background);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .app {
@@ -66,17 +80,18 @@ body {
 .card {
   background-color: var(--surface);
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--shadow-color);
   padding: 16px;
   margin-bottom: 16px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .elevation-1 {
-  box-shadow: 0 2px 1px -1px rgba(0,0,0,0.2), 0 1px 1px 0 rgba(0,0,0,0.14), 0 1px 3px 0 rgba(0,0,0,0.12);
+  box-shadow: 0 2px 1px -1px var(--shadow-color), 0 1px 1px 0 var(--shadow-color), 0 1px 3px 0 var(--shadow-color);
 }
 
 .elevation-2 {
-  box-shadow: 0 3px 1px -2px rgba(0,0,0,0.2), 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12);
+  box-shadow: 0 3px 1px -2px var(--shadow-color), 0 2px 2px 0 var(--shadow-color), 0 1px 5px 0 var(--shadow-color);
 }
 
 .btn {
@@ -147,7 +162,7 @@ body {
   display: block;
   margin-bottom: 8px;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--text-secondary);
 }
 
 .form-control {
@@ -155,9 +170,11 @@ body {
   height: 40px;
   padding: 8px 12px;
   font-size: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.23);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   transition: border-color 0.3s;
+  background-color: var(--surface);
+  color: var(--text-primary);
 }
 
 .form-control:focus {
@@ -177,7 +194,7 @@ body {
   transform: translateY(-50%);
   pointer-events: none;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--text-secondary);
 }
 
 select.form-control {

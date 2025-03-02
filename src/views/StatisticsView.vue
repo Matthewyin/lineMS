@@ -2,96 +2,119 @@
   <div class="statistics-view">
     <h1 class="page-title">{{ currentYear }}年统计分析</h1>
     
-    <filter-panel 
-      :data="currentData" 
-      @filter-changed="handleFilterChange"
-    />
-    
-    <div class="statistics-grid">
-      <div class="statistics-summary card">
-        <h2 class="summary-title">数据概览</h2>
-        <div class="summary-cards">
-          <div class="summary-card">
-            <div class="summary-icon isp-icon">
-              <span class="material-icons">business</span>
+    <div class="statistics-layout">
+      <!-- 左侧筛选面板 -->
+      <div class="filter-sidebar">
+        <filter-panel 
+          :data="currentData" 
+          @filter-changed="handleFilterChange"
+        />
+      </div>
+      
+      <!-- 右侧内容区域 -->
+      <div class="content-area">
+        <div class="statistics-summary card">
+          <h2 class="summary-title">数据概览</h2>
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="summary-icon isp-icon">
+                <span class="material-icons">business</span>
+              </div>
+              <div class="summary-content">
+                <div class="summary-value">{{ uniqueValues.ISP.length }}</div>
+                <div class="summary-label">ISP数量</div>
+              </div>
             </div>
-            <div class="summary-content">
-              <div class="summary-value">{{ uniqueValues.isp.length }}</div>
-              <div class="summary-label">ISP数量</div>
+            
+            <div class="summary-card">
+              <div class="summary-icon cost-icon">
+                <span class="material-icons">payments</span>
+              </div>
+              <div class="summary-content">
+                <div class="summary-value">{{ formatCurrency(totalCost) }}</div>
+                <div class="summary-label">总费用</div>
+              </div>
             </div>
-          </div>
-          
-          <div class="summary-card">
-            <div class="summary-icon cost-icon">
-              <span class="material-icons">payments</span>
+            
+            <div class="summary-card">
+              <div class="summary-icon remote-icon">
+                <span class="material-icons">location_on</span>
+              </div>
+              <div class="summary-content">
+                <div class="summary-value">{{ uniqueValues.remote.length }}</div>
+                <div class="summary-label">线路对端数量</div>
+              </div>
             </div>
-            <div class="summary-content">
-              <div class="summary-value">{{ totalCost.toFixed(2) }}</div>
-              <div class="summary-label">总费用</div>
-            </div>
-          </div>
-          
-          <div class="summary-card">
-            <div class="summary-icon bandwidth-icon">
-              <span class="material-icons">speed</span>
-            </div>
-            <div class="summary-content">
-              <div class="summary-value">{{ totalBandwidth }}</div>
-              <div class="summary-label">总带宽</div>
-            </div>
-          </div>
-          
-          <div class="summary-card">
-            <div class="summary-icon lines-icon">
-              <span class="material-icons">timeline</span>
-            </div>
-            <div class="summary-content">
-              <div class="summary-value">{{ filteredData.length }}</div>
-              <div class="summary-label">线路数量</div>
+            
+            <div class="summary-card">
+              <div class="summary-icon purpose-icon">
+                <span class="material-icons">category</span>
+              </div>
+              <div class="summary-content">
+                <div class="summary-value">{{ uniqueValues.purpose.length }}</div>
+                <div class="summary-label">业务用途数量</div>
+              </div>
             </div>
           </div>
         </div>
+        
+        <div class="statistics-charts">
+          <div class="charts-row">
+            <chart-panel 
+              title="按运营商统计"
+              :data="filteredData"
+              group-by="ISP"
+              value-field="cost_year"
+              :filters="filters"
+              ref="ispChart"
+            />
+            
+            <chart-panel 
+              title="按线路类型统计"
+              :data="filteredData"
+              group-by="line_type"
+              value-field="cost_year"
+              :filters="filters"
+            />
+          </div>
+          
+          <div class="charts-row">
+            <chart-panel 
+              title="按付费方统计"
+              :data="filteredData"
+              group-by="payer"
+              value-field="cost_year"
+              :filters="filters"
+            />
+            
+            <chart-panel 
+              title="按业务用途统计"
+              :data="filteredData"
+              group-by="purpose"
+              value-field="cost_year"
+              :filters="filters"
+            />
+          </div>
+          
+          <div class="charts-row">
+            <chart-panel 
+              title="按线路本地统计"
+              :data="filteredData"
+              group-by="local"
+              value-field="cost_year"
+              :filters="filters"
+            />
+            
+            <chart-panel 
+              title="按线路对端统计"
+              :data="filteredData"
+              group-by="remote"
+              value-field="cost_year"
+              :filters="filters"
+            />
+          </div>
+        </div>
       </div>
-      
-      <chart-panel 
-        title="按ISP统计"
-        :data="filteredData"
-        group-by="isp"
-        value-field="cost"
-        :filters="filters"
-      />
-      
-      <chart-panel 
-        title="按Payer统计"
-        :data="filteredData"
-        group-by="payer"
-        value-field="cost"
-        :filters="filters"
-      />
-      
-      <chart-panel 
-        title="按Purpose统计"
-        :data="filteredData"
-        group-by="purpose"
-        value-field="cost"
-        :filters="filters"
-      />
-      
-      <chart-panel 
-        title="按Local统计"
-        :data="filteredData"
-        group-by="local"
-        value-field="cost"
-        :filters="filters"
-      />
-      
-      <chart-panel 
-        title="按Remote统计"
-        :data="filteredData"
-        group-by="remote"
-        value-field="cost"
-        :filters="filters"
-      />
     </div>
   </div>
 </template>
@@ -118,8 +141,10 @@ export default {
     filteredData() {
       return this.currentData.filter(item => {
         for (const key in this.filters) {
-          if (this.filters[key] && item[key] !== this.filters[key]) {
-            return false;
+          if (Array.isArray(this.filters[key]) && this.filters[key].length > 0) {
+            if (!this.filters[key].includes(item[key])) {
+              return false;
+            }
           }
         }
         return true;
@@ -127,7 +152,7 @@ export default {
     },
     uniqueValues() {
       const result = {
-        isp: [],
+        ISP: [],
         payer: [],
         local: [],
         remote: [],
@@ -145,15 +170,29 @@ export default {
       return result;
     },
     totalCost() {
-      return this.filteredData.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0);
-    },
-    totalBandwidth() {
-      return this.filteredData.reduce((sum, item) => sum + parseFloat(item.bandwidth || 0), 0);
+      return this.filteredData.reduce((sum, item) => sum + parseFloat(item.cost_year || 0), 0);
     }
+  },
+  mounted() {
+    // 确保图表在页面加载后正确渲染
+    setTimeout(() => {
+      if (this.$refs.ispChart) {
+        this.$refs.ispChart.renderChart();
+      }
+    }, 500);
   },
   methods: {
     handleFilterChange(filters) {
       this.filters = filters;
+    },
+    formatCurrency(value) {
+      // 使用货币格式显示费用
+      return new Intl.NumberFormat('zh-CN', { 
+        style: 'currency', 
+        currency: 'CNY',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(value);
     }
   }
 }
@@ -171,14 +210,23 @@ export default {
   color: var(--primary);
 }
 
-.statistics-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+.statistics-layout {
+  display: flex;
   gap: 24px;
 }
 
+.filter-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.content-area {
+  flex: 1;
+  min-width: 0; /* 防止内容溢出 */
+}
+
 .statistics-summary {
-  grid-column: 1 / -1;
+  margin-bottom: 24px;
 }
 
 .summary-title {
@@ -197,8 +245,9 @@ export default {
   display: flex;
   align-items: center;
   padding: 16px;
-  background-color: #f5f5f5;
+  background-color: var(--surface);
   border-radius: 8px;
+  box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .summary-icon {
@@ -224,11 +273,11 @@ export default {
   background-color: #f44336;
 }
 
-.bandwidth-icon {
+.remote-icon {
   background-color: #2196f3;
 }
 
-.lines-icon {
+.purpose-icon {
   background-color: #ff9800;
 }
 
@@ -240,20 +289,45 @@ export default {
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
+  color: var(--text-primary);
 }
 
 .summary-label {
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--text-secondary);
 }
 
+.statistics-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.charts-row {
+  display: flex;
+  gap: 24px;
+}
+
+.charts-row > * {
+  flex: 1;
+}
+
+/* 响应式布局 */
 @media (max-width: 1200px) {
-  .statistics-grid {
-    grid-template-columns: 1fr;
+  .statistics-layout {
+    flex-direction: column;
+  }
+  
+  .filter-sidebar {
+    width: 100%;
   }
 }
 
 @media (max-width: 768px) {
+  .charts-row {
+    flex-direction: column;
+  }
+  
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
   }

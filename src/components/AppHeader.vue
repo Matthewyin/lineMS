@@ -1,8 +1,8 @@
 <template>
-  <header class="header elevation-2">
-    <div class="header-content">
+  <header class="app-header">
+    <div class="container">
       <div class="logo">
-        <img src="@/assets/logo.png" alt="LineMS Logo" />
+        <img src="../assets/logo.png" alt="LineMS Logo" class="logo-image" />
         <h1>LineMS</h1>
       </div>
       <nav class="nav">
@@ -10,12 +10,13 @@
         <router-link to="/statistics" class="nav-link">统计分析</router-link>
         <router-link to="/comparison" class="nav-link">数据对比</router-link>
       </nav>
-      <div class="year-selector">
-        <label for="year-select">选择年份:</label>
-        <select id="year-select" v-model="selectedYear" @change="changeYear">
-          <option value="2025">2025年</option>
-          <option value="2026">2026年</option>
-        </select>
+      <div class="actions">
+        <div class="year-selector">
+          <span>选择年份: </span>
+          <select v-model="selectedYear" class="year-select" @change="changeYear">
+            <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
+          </select>
+        </div>
       </div>
     </div>
   </header>
@@ -26,44 +27,64 @@ import { mapState, mapActions } from 'vuex';
 
 export default {
   name: 'AppHeader',
+  data() {
+    return {
+      availableYears: ['2025年', '2026年'],
+      selectedYear: '2025年'
+    };
+  },
   computed: {
     ...mapState('data', ['currentYear'])
   },
-  data() {
-    return {
-      selectedYear: '2025'
-    };
+  watch: {
+    currentYear: {
+      immediate: true,
+      handler(newYear) {
+        console.log('Current year changed to:', newYear);
+        this.selectedYear = `${newYear}年`;
+      }
+    }
   },
   created() {
-    this.selectedYear = this.currentYear.toString();
+    // 初始化选中的年份
+    this.selectedYear = `${this.currentYear}年`;
+    console.log('AppHeader created, selectedYear:', this.selectedYear);
   },
   methods: {
     ...mapActions('data', ['setCurrentYear']),
     changeYear() {
-      this.setCurrentYear(parseInt(this.selectedYear));
+      // 从字符串中提取年份数字
+      const yearMatch = this.selectedYear.match(/\d+/);
+      if (yearMatch) {
+        const year = parseInt(yearMatch[0]);
+        console.log('Changing year to:', year);
+        this.setCurrentYear(year);
+      }
     }
   }
-}
+};
 </script>
 
 <style scoped>
-.header {
+.app-header {
   background-color: var(--primary);
   color: var(--on-primary);
-  padding: 0 20px;
-  height: 64px;
+  padding: 0;
+  box-shadow: 0 2px 4px var(--shadow-color);
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
+.container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 64px;
 }
 
 .logo {
@@ -71,87 +92,94 @@ export default {
   align-items: center;
 }
 
-.logo img {
-  height: 36px;
-  margin-right: 12px;
+.logo-image {
+  height: 32px;
+  margin-right: 10px;
 }
 
 .logo h1 {
-  font-size: 20px;
+  font-size: 1.5rem;
   font-weight: 500;
+  margin: 0;
+  color: var(--on-primary);
 }
 
 .nav {
   display: flex;
+  align-items: center;
 }
 
 .nav-link {
   color: var(--on-primary);
   text-decoration: none;
-  padding: 0 16px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  position: relative;
+  padding: 8px 16px;
+  margin: 0 4px;
+  border-radius: 4px;
   font-weight: 500;
   transition: background-color 0.3s;
+  position: relative;
 }
 
 .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.nav-link.router-link-active {
+  color: var(--on-primary);
 }
 
 .nav-link.router-link-active::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: -4px;
   left: 0;
   width: 100%;
-  height: 3px;
+  height: 2px;
   background-color: var(--secondary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
 }
 
 .year-selector {
   display: flex;
   align-items: center;
-}
-
-.year-selector label {
-  margin-right: 8px;
-  font-size: 14px;
-}
-
-.year-selector select {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
   color: var(--on-primary);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 14px;
 }
 
-.year-selector select:focus {
-  outline: none;
-  border-color: var(--secondary);
+.year-select {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: var(--on-primary);
+  cursor: pointer;
+  margin-left: 8px;
 }
 
 @media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
+  .container {
+    flex-wrap: wrap;
     height: auto;
-    padding: 12px 0;
-  }
-  
-  .header {
-    height: auto;
+    padding: 10px 20px;
   }
   
   .nav {
-    margin: 12px 0;
+    order: 3;
+    width: 100%;
+    margin-top: 10px;
+    justify-content: space-between;
   }
   
   .nav-link {
-    height: 48px;
+    padding: 8px;
+    margin: 0;
+  }
+  
+  .year-selector span {
+    display: none;
   }
 }
 </style>
