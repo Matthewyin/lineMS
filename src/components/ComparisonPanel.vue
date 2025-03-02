@@ -4,6 +4,7 @@
     
     <div class="comparison-filters">
       <div class="form-group">
+        <label class="form-label">分组字段</label>
         <div class="select-wrapper">
           <select v-model="groupField" class="form-control" @change="updateComparison">
             <option 

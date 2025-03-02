@@ -1,107 +1,140 @@
 <template>
   <div class="statistics-chart-container">
     <div v-if="loading" class="chart-loading">
-      <div class="spinner"></div>
-      <p>加载中...</p>
+      <div class="loading-spinner"></div>
+      <span>加载中...</span>
     </div>
-    
     <div v-else-if="!hasData" class="chart-no-data">
-      <p>没有符合条件的数据</p>
+      <span>暂无数据</span>
     </div>
-    
-    <div v-else :id="chartWrapperId" class="chart-wrapper">
-      <canvas :id="canvasId" ref="statisticsChart"></canvas>
+    <div v-else class="chart-wrapper">
+      <v-chart class="chart" :option="chartOption" autoresize />
     </div>
   </div>
 </template>
 
-<script>
-import { v4 as uuidv4 } from 'uuid';
+<script setup>
+import { computed, defineProps } from 'vue'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { GraphChart } from 'echarts/charts'
+import {
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  TitleComponent,
+  ToolboxComponent
+} from 'echarts/components'
+import VChart from 'vue-echarts'
 
-export default {
-  name: 'StatisticsChart',
-  props: {
-    chartData: {
-      type: Object,
-      required: true
-    },
-    loading: {
-      type: Boolean,
-      default: false
-    },
-    hasData: {
-      type: Boolean,
-      default: false
-    }
+use([
+  CanvasRenderer,
+  GraphChart,
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  TitleComponent,
+  ToolboxComponent
+])
+
+const props = defineProps({
+  data: {
+    type: Object,
+    required: true
   },
-  data() {
-    return {
-      statisticsChart: null,
-      chartId: uuidv4(),
-      darkModeMediaQuery: null
-    };
+  loading: {
+    type: Boolean,
+    default: false
   },
-  computed: {
-    canvasId() {
-      return `statisticsChart-${this.chartId}`;
-    },
-    chartWrapperId() {
-      return `statistics-wrapper-${this.chartId}`;
-    }
-  },
-  watch: {
-    chartData: {
-      deep: true,
-      handler() {
-        this.renderChart();
-      }
-    }
-  },
-  mounted() {
-    // 延迟渲染以确保DOM已完全加载
-    setTimeout(() => {
-      this.renderChart();
-    }, 300);
-    
-    // 监听系统主题变化
-    this.darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    this.darkModeMediaQuery.addEventListener('change', this.handleThemeChange);
-  },
-  beforeUnmount() {
-    this.destroyChart();
-    
-    // 移除主题变化监听
-    if (this.darkModeMediaQuery) {
-      this.darkModeMediaQuery.removeEventListener('change', this.handleThemeChange);
-    }
-  },
-  methods: {
-    renderChart() {
-      if (!this.hasData || this.loading) return;
-      
-      this.destroyChart();
-      
-      // 基本实现，需要根据实际需求完善
-      console.log('StatisticsChart将在未来实现');
-    },
-    destroyChart() {
-      if (this.statisticsChart) {
-        this.statisticsChart.destroy();
-        this.statisticsChart = null;
-      }
-    },
-    handleThemeChange() {
-      // 重新渲染图表以适应新主题
-      this.renderChart();
-    }
+  hasData: {
+    type: Boolean,
+    default: false
   }
-};
+})
+
+// 图表配置
+const chartOption = computed(() => {
+  if (!props.hasData) return {}
+
+  return {
+    title: {
+      text: '线路拓扑关系图',
+      left: 'center',
+      top: 20,
+      textStyle: {
+        fontSize: 16,
+        fontWeight: 'bold'
+      }
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: (params) => {
+        if (params.dataType === 'node') {
+          return `${params.name}`
+        }
+        return `${params.data.source} -> ${params.data.target}`
+      }
+    },
+    legend: {
+      data: ['本端', '对端'],
+      orient: 'horizontal',
+      bottom: 10,
+      left: 'center'
+    },
+    toolbox: {
+      feature: {
+        restore: {},
+        saveAsImage: {}
+      }
+    },
+    animationDuration: 1500,
+    animationEasingUpdate: 'quinticInOut',
+    series: [{
+      name: '线路拓扑',
+      type: 'graph',
+      layout: 'force',
+      data: props.data.nodes,
+      links: props.data.links,
+      categories: [
+        { name: '本端' },
+        { name: '对端' }
+      ],
+      roam: true,
+      label: {
+        show: true,
+        position: 'right',
+        formatter: '{b}'
+      },
+      force: {
+        repulsion: 1000,
+        edgeLength: 200
+      },
+      lineStyle: {
+        color: '#4f46e5',
+        width: 2,
+        curveness: 0.3
+      },
+      itemStyle: {
+        color: function(params) {
+          // 本端节点使用深蓝色，对端节点使用绿色
+          return params.data.category === 0 ? '#4f46e5' : '#22c55e'
+        }
+      },
+      emphasis: {
+        focus: 'adjacency',
+        lineStyle: {
+          width: 4
+        }
+      }
+    }]
+  }
+})
 </script>
 
 <style scoped>
 .statistics-chart-container {
   position: relative;
-  height: 400px;
+  height: 600px;
   width: 100%;
 }
 
@@ -110,24 +143,32 @@ export default {
   width: 100%;
 }
 
+.chart {
+  width: 100%;
+  height: 100%;
+}
+
 .chart-loading,
 .chart-no-data {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  width: 100%;
-  color: var(--text-secondary);
+  background-color: var(--background);
 }
 
-.spinner {
+.loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
+  border: 3px solid var(--border-color);
   border-top-color: var(--primary);
-  animation: spin 1s ease-in-out infinite;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
   margin-bottom: 16px;
 }
 
