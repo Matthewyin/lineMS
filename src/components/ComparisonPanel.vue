@@ -4,10 +4,13 @@
     
     <div class="comparison-filters">
       <div class="form-group">
-        <label class="form-label">分组字段</label>
         <div class="select-wrapper">
           <select v-model="groupField" class="form-control" @change="updateComparison">
-            <option v-for="field in groupFields" :key="field.key" :value="field.key">
+            <option 
+              v-for="field in groupFields" 
+              :key="field.key" 
+              :value="field.key"
+            >
               {{ field.label }}
             </option>
           </select>
@@ -100,9 +103,7 @@ export default {
         { key: 'ISP', label: '运营商' },
         { key: 'line_type', label: '线路类型' },
         { key: 'payer', label: '付费方' },
-        { key: 'local', label: '线路本端' },
-        { key: 'remote', label: '线路对端' },
-        { key: 'purpose', label: '业务用途' }
+        { key: 'local', label: '线路本端' }
       ];
     },
     filteredData2025() {
