@@ -39,13 +39,12 @@
       :has-data="hasData"
     />
     
-    <!-- 变化明细表格组件 -->
-    <comparison-detail-table
+    <!-- 新的变化明细表格组件 -->
+    <comparison-change-detail
       :data2025="filteredData2025"
       :data2026="filteredData2026"
       :current-year="currentYear"
       :next-year="nextYear"
-      :group-field="groupField"
       :loading="loading"
       :has-data="hasData"
     />
@@ -56,14 +55,14 @@
 import { mapState } from 'vuex';
 import ComparisonChart from './ComparisonChart.vue';
 import ComparisonSummaryTable from './ComparisonSummaryTable.vue';
-import ComparisonDetailTable from './ComparisonDetailTable.vue';
+import ComparisonChangeDetail from './ComparisonChangeDetail.vue';
 
 export default {
   name: 'ComparisonPanel',
   components: {
     ComparisonChart,
     ComparisonSummaryTable,
-    ComparisonDetailTable
+    ComparisonChangeDetail
   },
   props: {
     data2025: {
