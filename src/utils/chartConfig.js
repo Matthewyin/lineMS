@@ -1,46 +1,27 @@
 import Chart from 'chart.js/auto';
 
-// 全局配置Chart.js以避免"Cannot read properties of null (reading 'save')"错误
+// 重置为简单的全局配置
 Chart.defaults.responsive = true;
 Chart.defaults.maintainAspectRatio = false;
-Chart.defaults.animation = false;
 
+// 基本事件处理
+Chart.defaults.events = ['mousemove', 'mouseout', 'click'];
 
-// 设置合理的动画配置
-Chart.defaults.animations = {
-  colors: {
-    duration: 1000
-  },
-  x: {
-    duration: 1000
-  },
-  y: {
-    duration: 1000
-  }
+// 基本交互行为
+Chart.defaults.interaction = {
+  mode: 'nearest',
+  intersect: true
 };
 
-// 设置合理的过渡配置
-Chart.defaults.transitions = {
-  active: {
-    animation: {
-      duration: 1000
-    }
-  },
-  resize: {
-    animation: {
-      duration: 1000
-    }
-  },
-  show: {
-    animation: {
-      duration: 1000
-    }
-  },
-  hide: {
-    animation: {
-      duration: 1000
-    }
-  }
+// 基本提示框配置
+Chart.defaults.plugins.tooltip = {
+  enabled: true,
+  position: 'nearest',
+  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  titleColor: 'white',
+  bodyColor: 'white',
+  padding: 10,
+  displayColors: true
 };
 
-export default Chart;
+export default Chart; 

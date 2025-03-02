@@ -7,7 +7,6 @@
       </div>
       <nav class="nav">
         <router-link to="/" class="nav-link">数据视图</router-link>
-        <router-link to="/statistics" class="nav-link">统计分析</router-link>
         <router-link to="/comparison" class="nav-link">数据对比</router-link>
       </nav>
       <div class="actions">

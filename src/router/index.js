@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import DataView from '@/views/DataView.vue';
-import StatisticsView from '@/views/StatisticsView.vue';
 import ComparisonView from '@/views/ComparisonView.vue';
 
 const routes = [
@@ -10,14 +9,13 @@ const routes = [
     component: DataView
   },
   {
-    path: '/statistics',
-    name: 'StatisticsView',
-    component: StatisticsView
-  },
-  {
     path: '/comparison',
     name: 'ComparisonView',
     component: ComparisonView
+  },
+  {
+    path: '/statistics',
+    redirect: '/'
   }
 ];
 

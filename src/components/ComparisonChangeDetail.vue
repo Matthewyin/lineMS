@@ -181,20 +181,6 @@ export default {
     // 计算两年数据的所有变化明细
     allChanges() {
       const changes = [];
-      const data2025Map = new Map();
-      const data2026Map = new Map();
-      
-      // 创建哈希函数，用于生成唯一标识
-      const hashObject = (obj) => {
-        const relevantFields = {
-          line_type: obj.line_type || '',
-          ISP: obj.ISP || '',
-          payer: obj.payer || '',
-          local: obj.local || '',
-          remote: obj.remote || ''
-        };
-        return JSON.stringify(relevantFields);
-      };
       
       // 处理数据并转换带宽值为数值
       const processData = (data) => {
@@ -213,37 +199,29 @@ export default {
       const processedData2025 = processData(this.data2025);
       const processedData2026 = processData(this.data2026);
       
+      // 创建一个唯一键函数，用于标识每条线路
+      const getLineKey = (line) => {
+        return line.local_line_number || `${line.ISP || ''}_${line.line_type || ''}_${line.local || ''}_${line.payer || ''}`;
+      };
+      
+      const data2025Map = new Map();
+      const data2026Map = new Map();
+      
       // 将2025年数据放入Map
       processedData2025.forEach(line => {
-        const lineHash = hashObject(line);
-        data2025Map.set(lineHash, line);
+        const key = getLineKey(line);
+        data2025Map.set(key, line);
       });
       
       // 将2026年数据放入Map
       processedData2026.forEach(line => {
-        const lineHash = hashObject(line);
-        data2026Map.set(lineHash, line);
+        const key = getLineKey(line);
+        data2026Map.set(key, line);
       });
       
-      // 查找新增的线路（2026年有，2025年没有）
-      data2026Map.forEach((line2026, lineHash) => {
-        if (!data2025Map.has(lineHash)) {
-          changes.push({
-            ...line2026,
-            changeType: 'added',
-            cost2025: 0,
-            cost2026: line2026.cost_year,
-            costDifference: line2026.cost_year,
-            bandwidth2025: 0,
-            bandwidth2026: line2026.bandwidthValue,
-            bandwidthDifference: line2026.bandwidthValue
-          });
-        }
-      });
-      
-      // 查找移除的线路（2025年有，2026年没有）
-      data2025Map.forEach((line2025, lineHash) => {
-        if (!data2026Map.has(lineHash)) {
+      // 1. 查找移除的线路（2025年有，2026年没有）
+      data2025Map.forEach((line2025, key) => {
+        if (!data2026Map.has(key)) {
           changes.push({
             ...line2025,
             changeType: 'removed',
@@ -257,54 +235,82 @@ export default {
         }
       });
       
-      // 查找变化的线路（两年都有，但费用或带宽不同）
-      data2025Map.forEach((line2025, lineHash) => {
-        if (data2026Map.has(lineHash)) {
-          const line2026 = data2026Map.get(lineHash);
+      // 2. 查找新增的线路（2026年有，2025年没有）
+      data2026Map.forEach((line2026, key) => {
+        if (!data2025Map.has(key)) {
+          changes.push({
+            ...line2026,
+            changeType: 'added',
+            cost2025: 0,
+            cost2026: line2026.cost_year,
+            costDifference: line2026.cost_year,
+            bandwidth2025: 0,
+            bandwidth2026: line2026.bandwidthValue,
+            bandwidthDifference: line2026.bandwidthValue
+          });
+        }
+      });
+      
+      // 3. 查找变化的线路（两年都有，但属性有变化）
+      data2025Map.forEach((line2025, key) => {
+        if (data2026Map.has(key)) {
+          const line2026 = data2026Map.get(key);
           const cost2025 = line2025.cost_year;
           const cost2026 = line2026.cost_year;
           const bandwidth2025 = line2025.bandwidthValue;
           const bandwidth2026 = line2026.bandwidthValue;
           
-          const costDifference = cost2026 - cost2025;
-          const bandwidthDifference = bandwidth2026 - bandwidth2025;
+          // 检查是否有属性变化
+          const hasChanges = (
+            cost2025 !== cost2026 || 
+            bandwidth2025 !== bandwidth2026 ||
+            line2025.ISP !== line2026.ISP ||
+            line2025.line_type !== line2026.line_type ||
+            line2025.payer !== line2026.payer ||
+            line2025.local !== line2026.local
+          );
           
-          const costChanged = Math.abs(costDifference) > 0.01; // 考虑浮点误差
-          const bandwidthChanged = Math.abs(bandwidthDifference) > 0.01; // 考虑浮点误差
-          
-          if (costChanged && bandwidthChanged) {
-            changes.push({
-              ...line2026,
-              changeType: 'cost_bandwidth_changed',
-              cost2025,
-              cost2026,
-              costDifference,
-              bandwidth2025,
-              bandwidth2026,
-              bandwidthDifference
-            });
-          } else if (costChanged) {
-            changes.push({
-              ...line2026,
-              changeType: 'cost_changed',
-              cost2025,
-              cost2026,
-              costDifference,
-              bandwidth2025,
-              bandwidth2026,
-              bandwidthDifference: 0
-            });
-          } else if (bandwidthChanged) {
-            changes.push({
-              ...line2026,
-              changeType: 'bandwidth_changed',
-              cost2025,
-              cost2026,
-              costDifference: 0,
-              bandwidth2025,
-              bandwidth2026,
-              bandwidthDifference
-            });
+          if (hasChanges) {
+            const costDifference = cost2026 - cost2025;
+            const bandwidthDifference = bandwidth2026 - bandwidth2025;
+            
+            const costChanged = Math.abs(costDifference) > 0.01; // 考虑浮点误差
+            const bandwidthChanged = Math.abs(bandwidthDifference) > 0.01; // 考虑浮点误差
+            
+            if (costChanged && bandwidthChanged) {
+              changes.push({
+                ...line2026,
+                changeType: 'cost_bandwidth_changed',
+                cost2025,
+                cost2026,
+                costDifference,
+                bandwidth2025,
+                bandwidth2026,
+                bandwidthDifference
+              });
+            } else if (costChanged) {
+              changes.push({
+                ...line2026,
+                changeType: 'cost_changed',
+                cost2025,
+                cost2026,
+                costDifference,
+                bandwidth2025,
+                bandwidth2026,
+                bandwidthDifference: 0
+              });
+            } else if (bandwidthChanged) {
+              changes.push({
+                ...line2026,
+                changeType: 'bandwidth_changed',
+                cost2025,
+                cost2026,
+                costDifference: 0,
+                bandwidth2025,
+                bandwidth2026,
+                bandwidthDifference
+              });
+            }
           }
         }
       });
@@ -402,11 +408,11 @@ export default {
     // 获取变化标识的CSS类
     getChangeBadgeClass(type) {
       return {
-        'badge-added': type === 'added',
-        'badge-removed': type === 'removed',
-        'badge-cost': type === 'cost_changed',
-        'badge-bandwidth': type === 'bandwidth_changed',
-        'badge-multiple': type === 'cost_bandwidth_changed'
+        'added-badge': type === 'added',
+        'removed-badge': type === 'removed',
+        'cost-changed-badge': type === 'cost_changed',
+        'bandwidth-changed-badge': type === 'bandwidth_changed',
+        'cost-bandwidth-changed-badge': type === 'cost_bandwidth_changed'
       };
     },
     
@@ -573,27 +579,27 @@ export default {
   font-weight: 500;
 }
 
-.badge-added {
+.added-badge {
   background-color: #e6f7ed;
   color: #1e8e3e;
 }
 
-.badge-removed {
+.removed-badge {
   background-color: #fce8e6;
   color: #d93025;
 }
 
-.badge-cost {
+.cost-changed-badge {
   background-color: #e8f0fe;
   color: #1a73e8;
 }
 
-.badge-bandwidth {
+.bandwidth-changed-badge {
   background-color: #f1e8fd;
   color: #8430ce;
 }
 
-.badge-multiple {
+.cost-bandwidth-changed-badge {
   background-color: #fff8e1;
   color: #f9a825;
 }
