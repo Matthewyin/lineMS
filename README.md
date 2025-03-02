@@ -1,4 +1,4 @@
-# LineMS - 生产线管理系统 | Line Management System
+# LineMS - 线路管理系统 | Line Management System
 
 ## 项目简介 | Introduction
 
