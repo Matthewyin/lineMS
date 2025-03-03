@@ -160,16 +160,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Chart.js 提供的可视化能力 | Chart.js for visualization capabilities
 - Material Design 的界面设计灵感 | Material Design for UI inspiration
 ```
-
-这个双语 README.md 文件：
-
-1. 保持了清晰的层级结构
-2. 中英文并列展示，方便不同语言用户阅读
-3. 使用分隔符 "|" 区分中英文
-4. 保留了所有重要信息
-5. 技术术语同时提供中英文说明
-
-您需要我对某个部分进行调整或补充吗？比如：
-- 添加更多技术细节
-- 调整中英文的展示方式
-- 补充特定的项目要求

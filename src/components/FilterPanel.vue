@@ -95,13 +95,13 @@ export default {
         payer: ['总部', '分公司', '第三方'],
         purpose: ['生产', '办公', '备份', '其他']
       }
-    };
+    }
   },
   computed: {
     // 获取排序后的筛选字段
     sortedFilterFields() {
-      const fields = Object.entries(this.filterFields);
-      return fields.sort((a, b) => a[1].order - b[1].order);
+      const fields = Object.entries(this.filterFields)
+      return fields.sort((a, b) => a[1].order - b[1].order)
     },
     allOptions() {
       // 从数据中提取筛选选项
@@ -112,93 +112,93 @@ export default {
         local: [],
         remote: [],
         purpose: []
-      };
+      }
       
       this.data.forEach(item => {
         for (const key in options) {
           if (item[key] && !options[key].includes(item[key])) {
-            options[key].push(item[key]);
+            options[key].push(item[key])
           }
         }
-      });
+      })
       
       // 应用固定排序规则
       for (const key in options) {
         if (this.sortRules[key]) {
           // 如果有固定排序规则，按规则排序
           options[key].sort((a, b) => {
-            const indexA = this.sortRules[key].indexOf(a);
-            const indexB = this.sortRules[key].indexOf(b);
+            const indexA = this.sortRules[key].indexOf(a)
+            const indexB = this.sortRules[key].indexOf(b)
             
             // 如果在规则中找不到，放到最后
-            if (indexA === -1 && indexB === -1) return a.localeCompare(b, 'zh-CN');
-            if (indexA === -1) return 1;
-            if (indexB === -1) return -1;
+            if (indexA === -1 && indexB === -1) return a.localeCompare(b, 'zh-CN')
+            if (indexA === -1) return 1
+            if (indexB === -1) return -1
             
-            return indexA - indexB;
-          });
+            return indexA - indexB
+          })
         } else {
           // 对于没有固定规则的字段（如local和remote），按中文排序
-          options[key].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+          options[key].sort((a, b) => a.localeCompare(b, 'zh-CN'))
         }
       }
       
-      return options;
+      return options
     },
     activeFilters() {
-      const active = {};
+      const active = {}
       for (const key in this.selectedFilters) {
         if (this.selectedFilters[key].length > 0 && 
             this.selectedFilters[key].length < this.allOptions[key].length) {
-          active[key] = this.selectedFilters[key];
+          active[key] = this.selectedFilters[key]
         }
       }
-      return active;
+      return active
     },
     hasActiveFilters() {
-      return Object.keys(this.activeFilters).length > 0;
+      return Object.keys(this.activeFilters).length > 0
     }
   },
   methods: {
     toggleShowMore(key) {
-      this.showAllOptions[key] = !this.showAllOptions[key];
+      this.showAllOptions[key] = !this.showAllOptions[key]
     },
     selectAll(field) {
-      this.selectedFilters[field] = [...this.allOptions[field]];
-      this.applyFilters();
+      this.selectedFilters[field] = [...this.allOptions[field]]
+      this.applyFilters()
     },
     deselectAll(field) {
-      this.selectedFilters[field] = [];
-      this.applyFilters();
+      this.selectedFilters[field] = []
+      this.applyFilters()
     },
     applyFilters() {
       // 如果某个筛选条件为空，视为选择全部
-      const filtersToApply = { ...this.selectedFilters };
+      const filtersToApply = { ...this.selectedFilters }
       for (const key in filtersToApply) {
         if (filtersToApply[key].length === 0) {
-          filtersToApply[key] = [...this.allOptions[key]];
+          filtersToApply[key] = [...this.allOptions[key]]
         }
       }
-      this.$emit('filter-changed', filtersToApply);
+      this.$emit('filter-changed', filtersToApply)
     },
     resetFilters() {
       // 重置为全选状态
       for (const key in this.selectedFilters) {
-        this.selectedFilters[key] = [...this.allOptions[key]];
+        this.selectedFilters[key] = [...this.allOptions[key]]
       }
-      this.applyFilters();
+      this.applyFilters()
     },
     removeFilter(key) {
       // 移除筛选条件时设为全选
-      this.selectedFilters[key] = [...this.allOptions[key]];
-      this.applyFilters();
+      this.selectedFilters[key] = [...this.allOptions[key]]
+      this.applyFilters()
     },
     initializeFilters() {
       // 初始化时设置所有选项为选中状态
       for (const key in this.allOptions) {
-        this.selectedFilters[key] = [...this.allOptions[key]];
+        this.selectedFilters[key] = [...this.allOptions[key]]
       }
-      this.applyFilters();
+      this.applyFilters()
     }
   },
   watch: {
@@ -207,8 +207,8 @@ export default {
       handler() {
         // 当数据变化时，重新初始化筛选条件
         this.$nextTick(() => {
-          this.initializeFilters();
-        });
+          this.initializeFilters()
+        })
       }
     }
   }
@@ -319,6 +319,24 @@ export default {
   height: 28px;
   padding: 0 8px;
   font-size: 12px;
+  color: #333;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-text {
+  color: #333 !important;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-text:hover {
+  color: #000 !important;
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
 .active-filters {
@@ -337,6 +355,7 @@ export default {
 .filter-chips {
   display: flex;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
 .chip {
@@ -348,8 +367,6 @@ export default {
   font-size: 14px;
   background-color: #e9f5fe;
   color: #3498db;
-  margin-right: 8px;
-  margin-bottom: 8px;
 }
 
 .chip-remove {
@@ -397,6 +414,16 @@ export default {
 
   .filter-actions {
     border-top-color: #444;
+  }
+
+  .filter-actions .btn,
+  .btn-text {
+    color: #e1e1e1 !important;
+  }
+
+  .btn-text:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1);
   }
 
   .active-filters {
