@@ -96,7 +96,8 @@ export default {
         'payer': '付费方',
         'local': '线路本端',
         'remote': '线路对端',
-        'purpose': '业务用途'
+        'purpose': '业务用途',
+        'local_line_number': '线路编号'
       };
       return fieldMap[field] || field;
     },

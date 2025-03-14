@@ -389,8 +389,8 @@ export default {
       const labels = {
         'added': '新增',
         'removed': '移除',
-        'cost_changed': '费用变化',
-        'bandwidth_changed': '带宽变化',
+        'cost_changed': '付费方变化',
+      //  'bandwidth_changed': '带宽变化',
         'cost_bandwidth_changed': '费用/带宽变化'
       };
       return labels[type] || type;
