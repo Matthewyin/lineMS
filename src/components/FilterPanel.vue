@@ -84,13 +84,13 @@ export default {
         purpose: false
       },
       filterFields: {
-        ISP: { label: '运营商', order: 1 },
+        ISP: { label: '运营商', order: 2 },
         line_type: { label: '线路类型', order: 3 },
         payer: { label: '付费方', order: 4 },
         local: { label: '线路本端', order: 5 },
         remote: { label: '线路对端', order: 7 },
         purpose: { label: '业务用途', order: 6 },
-        bandwidth: { label: '带宽', order: 2 }
+        bandwidth: { label: '带宽', order: 1 }
       },
       // 定义固定的排序规则
       sortRules: {
