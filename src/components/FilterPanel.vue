@@ -45,7 +45,8 @@
           :key="key"
           class="chip"
         >
-          {{ filterFields[key].label }}: {{ values.join(', ') }}
+          {{ filterFields[key] ? filterFields[key].label : key }}: 
+          {{ Array.isArray(values) ? values.join(', ') : values }}
           <button class="chip-remove" @click="removeFilter(key)">×</button>
         </div>
       </div>
@@ -67,6 +68,7 @@ export default {
       selectedFilters: {
         ISP: [],
         line_type: [],
+        bandwidth: [],
         payer: [],
         local: [],
         remote: [],
@@ -75,6 +77,7 @@ export default {
       showAllOptions: {
         ISP: false,
         line_type: false,
+        bandwidth: false,
         payer: false,
         local: false,
         remote: false,
@@ -83,14 +86,15 @@ export default {
       filterFields: {
         ISP: { label: '运营商', order: 1 },
         line_type: { label: '线路类型', order: 2 },
-        payer: { label: '付费方', order: 3 },
-        local: { label: '线路本端', order: 4 },
-        remote: { label: '线路对端', order: 5 },
-        purpose: { label: '业务用途', order: 6 }
+        payer: { label: '付费方', order: 4 },
+        local: { label: '线路本端', order: 5 },
+        remote: { label: '线路对端', order: 7 },
+        purpose: { label: '业务用途', order: 6 },
+        bandwidth: { label: '带宽', order: 3 }
       },
       // 定义固定的排序规则
       sortRules: {
-        ISP: ['中国电信', '中国联通', '中国移动', '中国广电', '其他'],
+        ISP: ['中国电信', '中国联通', '中国移动'],
         line_type: ['MSTP', 'MPLS VPN', '互联网专线', '裸光纤', '其他'],
         payer: ['总部', '分公司', '第三方'],
         purpose: ['生产', '办公', '备份', '其他']
@@ -111,12 +115,18 @@ export default {
         payer: [],
         local: [],
         remote: [],
-        purpose: []
+        purpose: [],
+        bandwidth: []
       }
       
       this.data.forEach(item => {
         for (const key in options) {
-          if (item[key] && !options[key].includes(item[key])) {
+          if (key === 'bandwidth') {
+            // 特殊处理带宽字段
+            if (item[key] && !options[key].includes(item[key])) {
+              options[key].push(item[key])
+            }
+          } else if (item[key] && !options[key].includes(item[key])) {
             options[key].push(item[key])
           }
         }
@@ -124,7 +134,14 @@ export default {
       
       // 应用固定排序规则
       for (const key in options) {
-        if (this.sortRules[key]) {
+        if (key === 'bandwidth') {
+          // 带宽按数值大小排序
+          options[key].sort((a, b) => {
+            const valueA = this.extractBandwidthValue(a)
+            const valueB = this.extractBandwidthValue(b)
+            return valueA - valueB
+          })
+        } else if (this.sortRules[key]) {
           // 如果有固定排序规则，按规则排序
           options[key].sort((a, b) => {
             const indexA = this.sortRules[key].indexOf(a)
@@ -160,6 +177,25 @@ export default {
     }
   },
   methods: {
+    // 提取带宽数值的辅助函数
+    extractBandwidthValue(bandwidthStr) {
+      if (!bandwidthStr) return 0
+      
+      // 如果是数字，直接返回
+      if (typeof bandwidthStr === 'number') return bandwidthStr
+      
+      // 如果是字符串，提取数字部分
+      // 例如 "100Mbps" -> 100, "2G" -> 2000
+      const numericPart = bandwidthStr.replace(/[^0-9.]/g, '')
+      let value = parseFloat(numericPart)
+      
+      // 处理单位转换
+      if (bandwidthStr.toLowerCase().includes('g')) {
+        value *= 1000 // 转换为Mbps
+      }
+      
+      return value || 0
+    },
     toggleShowMore(key) {
       this.showAllOptions[key] = !this.showAllOptions[key]
     },
