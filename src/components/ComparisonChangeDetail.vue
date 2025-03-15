@@ -1,7 +1,7 @@
 <template>
   <div class="change-detail-container card" v-if="hasData && !loading">
     <h3 class="section-title">变化明细表</h3>
-    
+
     <div class="filters-container">
       <div class="form-group">
         <label class="form-label">变化类型</label>
@@ -15,7 +15,7 @@
           </select>
         </div>
       </div>
-      
+
       <div class="form-group">
         <label class="form-label">排序方式</label>
         <div class="select-wrapper">
@@ -28,7 +28,7 @@
           </select>
         </div>
       </div>
-      
+
       <div class="form-group">
         <label class="form-label">排序顺序</label>
         <div class="btn-group">
@@ -41,59 +41,59 @@
         </div>
       </div>
     </div>
-    
+
     <div v-if="filteredChanges.length === 0" class="empty-state">
       <p>没有符合条件的变化明细数据</p>
     </div>
-    
+
     <div v-else class="table-container">
       <table class="change-table">
         <thead>
-          <tr>
-            <th class="change-type">变化类型</th>
-            <th>线路类型</th>
-            <th>运营商</th>
-            <th>付费方</th>
-            <th>线路本端</th>
-            <th>线路对端</th>
-            <th>{{ currentYear }}年带宽</th>
-            <th>{{ nextYear }}年带宽</th>
-            <th>带宽变化</th>
-            <th>{{ currentYear }}年费用</th>
-            <th>{{ nextYear }}年费用</th>
-            <th>费用变化</th>
-          </tr>
+        <tr>
+          <th class="change-type">变化类型</th>
+          <th>线路类型</th>
+          <th>运营商</th>
+          <th>付费方</th>
+          <th>线路本端</th>
+          <th>线路对端</th>
+          <th>{{ currentYear }}年带宽</th>
+          <th>{{ nextYear }}年带宽</th>
+          <th>带宽变化</th>
+          <th>{{ currentYear }}年费用</th>
+          <th>{{ nextYear }}年费用</th>
+          <th>费用变化</th>
+        </tr>
         </thead>
         <tbody>
-          <tr 
-            v-for="(item, index) in filteredChanges" 
-            :key="index" 
+        <tr
+            v-for="(item, index) in filteredChanges"
+            :key="index"
             :class="getRowClass(item.changeType)"
-          >
-            <td class="change-type">
+        >
+          <td class="change-type">
               <span class="change-badge" :class="getChangeBadgeClass(item.changeType)">
                 {{ getChangeTypeLabel(item.changeType) }}
               </span>
-            </td>
-            <td>{{ item.line_type || '-' }}</td>
-            <td>{{ item.ISP || '-' }}</td>
-            <td>{{ item.payer || '-' }}</td>
-            <td>{{ item.local || '-' }}</td>
-            <td>{{ item.remote || '-' }}</td>
-            <td>{{ formatBandwidth(item.bandwidth2025) }}</td>
-            <td>{{ formatBandwidth(item.bandwidth2026) }}</td>
-            <td :class="getDifferenceClass(item.bandwidthDifference)">
-              {{ formatBandwidthDifference(item.bandwidthDifference) }}
-            </td>
-            <td>{{ formatCurrency(item.cost2025) }}</td>
-            <td>{{ formatCurrency(item.cost2026) }}</td>
-            <td :class="getDifferenceClass(item.costDifference)">
-              {{ formatCurrencyDifference(item.costDifference) }}
-            </td>
-          </tr>
+          </td>
+          <td>{{ item.line_type || '-' }}</td>
+          <td>{{ item.ISP || '-' }}</td>
+          <td>{{ item.payer || '-' }}</td>
+          <td>{{ item.local || '-' }}</td>
+          <td>{{ item.remote || '-' }}</td>
+          <td>{{ formatBandwidth(item.bandwidth2025) }}</td>
+          <td>{{ formatBandwidth(item.bandwidth2026) }}</td>
+          <td :class="getDifferenceClass(item.bandwidthDifference)">
+            {{ formatBandwidthDifference(item.bandwidthDifference) }}
+          </td>
+          <td>{{ formatCurrency(item.cost2025) }}</td>
+          <td>{{ formatCurrency(item.cost2026) }}</td>
+          <td :class="getDifferenceClass(item.costDifference)">
+            {{ formatCurrencyDifference(item.costDifference) }}
+          </td>
+        </tr>
         </tbody>
       </table>
-      
+
       <div class="summary-container">
         <div class="summary-card">
           <h4>变化统计</h4>
@@ -114,7 +114,7 @@
             <span class="value">{{ getChangeTypeCount('bandwidth_changed') }}条</span>
           </div>
         </div>
-        
+
         <div class="summary-card">
           <h4>费用影响</h4>
           <div class="summary-item">
@@ -133,7 +133,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="result-summary" v-if="filteredChanges.length > 0">
         共 {{ filteredChanges.length }} 条记录
       </div>
@@ -181,7 +181,7 @@ export default {
     // 计算两年数据的所有变化明细
     allChanges() {
       const changes = [];
-      
+
       // 处理数据并转换带宽值为数值
       const processData = (data) => {
         return data.map(item => {
@@ -195,30 +195,30 @@ export default {
           };
         });
       };
-      
+
       const processedData2025 = processData(this.data2025);
       const processedData2026 = processData(this.data2026);
-      
+
       // 创建一个唯一键函数，用于标识每条线路
       const getLineKey = (line) => {
         return line.local_line_number || `${line.ISP || ''}_${line.line_type || ''}_${line.local || ''}_${line.payer || ''}`;
       };
-      
+
       const data2025Map = new Map();
       const data2026Map = new Map();
-      
+
       // 将2025年数据放入Map
       processedData2025.forEach(line => {
         const key = getLineKey(line);
         data2025Map.set(key, line);
       });
-      
+
       // 将2026年数据放入Map
       processedData2026.forEach(line => {
         const key = getLineKey(line);
         data2026Map.set(key, line);
       });
-      
+
       // 1. 查找移除的线路（2025年有，2026年没有）
       data2025Map.forEach((line2025, key) => {
         if (!data2026Map.has(key)) {
@@ -234,7 +234,7 @@ export default {
           });
         }
       });
-      
+
       // 2. 查找新增的线路（2026年有，2025年没有）
       data2026Map.forEach((line2026, key) => {
         if (!data2025Map.has(key)) {
@@ -250,7 +250,7 @@ export default {
           });
         }
       });
-      
+
       // 3. 查找变化的线路（两年都有，但属性有变化）
       data2025Map.forEach((line2025, key) => {
         if (data2026Map.has(key)) {
@@ -259,24 +259,27 @@ export default {
           const cost2026 = line2026.cost_year;
           const bandwidth2025 = line2025.bandwidthValue;
           const bandwidth2026 = line2026.bandwidthValue;
-          
+          const payer2025 = line2025.payer || '';
+          const payer2026 = line2026.payer || '';
+
           // 检查是否有属性变化
           const hasChanges = (
-            cost2025 !== cost2026 || 
-            bandwidth2025 !== bandwidth2026 ||
-            line2025.ISP !== line2026.ISP ||
-            line2025.line_type !== line2026.line_type ||
-            line2025.payer !== line2026.payer ||
-            line2025.local !== line2026.local
+              cost2025 !== cost2026 ||
+              bandwidth2025 !== bandwidth2026 ||
+              line2025.ISP !== line2026.ISP ||
+              line2025.line_type !== line2026.line_type ||
+              payer2025 !== payer2026 ||
+              line2025.local !== line2026.local
           );
-          
+
           if (hasChanges) {
             const costDifference = cost2026 - cost2025;
             const bandwidthDifference = bandwidth2026 - bandwidth2025;
-            
+
             const costChanged = Math.abs(costDifference) > 0.01; // 考虑浮点误差
             const bandwidthChanged = Math.abs(bandwidthDifference) > 0.01; // 考虑浮点误差
-            
+            const payerChanged = line2025.payer !== line2026.payer;
+
             if (costChanged && bandwidthChanged) {
               changes.push({
                 ...line2026,
@@ -310,39 +313,52 @@ export default {
                 bandwidth2026,
                 bandwidthDifference
               });
+            } else if (payerChanged) {
+              changes.push({
+                ...line2026,
+                changeType: 'payer_changed',
+                cost2025,
+                cost2026,
+                costDifference: 0,
+                bandwidth2025,
+                bandwidth2026,
+                bandwidthDifference: 0
+              });
             }
           }
         }
       });
-      
+
       return changes;
     },
-    
+
     // 根据筛选条件过滤变化明细
     filteredChanges() {
       let result = [...this.allChanges];
-      
+
       // 根据变化类型筛选
       if (this.selectedChangeType !== 'all') {
         if (this.selectedChangeType === 'cost_changed') {
-          result = result.filter(item => 
-            item.changeType === 'cost_changed' || 
-            item.changeType === 'cost_bandwidth_changed'
+          result = result.filter(item =>
+              item.changeType === 'cost_changed' ||
+              item.changeType === 'cost_bandwidth_changed'
           );
         } else if (this.selectedChangeType === 'bandwidth_changed') {
-          result = result.filter(item => 
-            item.changeType === 'bandwidth_changed' || 
-            item.changeType === 'cost_bandwidth_changed'
+          result = result.filter(item =>
+              item.changeType === 'bandwidth_changed' ||
+              item.changeType === 'cost_bandwidth_changed'
           );
+        } else if (this.selectedChangeType === 'payer_changed') {
+          result = result.filter(item => item.changeType === 'payer_changed');
         } else {
           result = result.filter(item => item.changeType === this.selectedChangeType);
         }
       }
-      
+
       // 根据选择的字段排序
       result.sort((a, b) => {
         let valueA, valueB;
-        
+
         switch (this.sortBy) {
           case 'type':
             valueA = this.getChangeTypeSortValue(a.changeType);
@@ -364,22 +380,26 @@ export default {
             valueA = Math.abs(a.bandwidthDifference);
             valueB = Math.abs(b.bandwidthDifference);
             break;
+          case 'payer_diff':
+            valueA = a.payer || '';
+            valueB = b.payer || '';
+            break;
           default:
             valueA = a[this.sortBy] || 0;
             valueB = b[this.sortBy] || 0;
         }
-        
+
         // 字符串比较
         if (typeof valueA === 'string' && typeof valueB === 'string') {
           const result = valueA.localeCompare(valueB);
           return this.sortDesc ? -result : result;
         }
-        
+
         // 数值比较
         const result = valueA - valueB;
         return this.sortDesc ? -result : result;
       });
-      
+
       return result;
     }
   },
@@ -390,21 +410,21 @@ export default {
         'added': '新增',
         'removed': '移除',
         'cost_changed': '付费方变化',
-      //  'bandwidth_changed': '带宽变化',
+        //  'bandwidth_changed': '带宽变化',
         'cost_bandwidth_changed': '费用/带宽变化'
       };
       return labels[type] || type;
     },
-    
+
     // 获取行的CSS类
     getRowClass(type) {
       return {
-        'added-row': type === 'added',
+        'added-row': type === 'added' ,
         'removed-row': type === 'removed',
-        'changed-row': type === 'cost_changed' || type === 'bandwidth_changed' || type === 'cost_bandwidth_changed'
+        'changed-row': type === 'cost_changed' || type === 'bandwidth_changed' || type === 'cost_bandwidth_changed' || type === 'payer_changed'
       };
     },
-    
+
     // 获取变化标识的CSS类
     getChangeBadgeClass(type) {
       return {
@@ -412,23 +432,24 @@ export default {
         'removed-badge': type === 'removed',
         'cost-changed-badge': type === 'cost_changed',
         'bandwidth-changed-badge': type === 'bandwidth_changed',
-        'cost-bandwidth-changed-badge': type === 'cost_bandwidth_changed'
+        'cost-bandwidth-changed-badge': type === 'cost_bandwidth_changed',
+        'payer-changed-badge': type === 'payer_changed'
       };
     },
-    
+
     // 格式化带宽显示
     formatBandwidth(value) {
       if (value === 0 || value === undefined || value === null) return '-';
       return `${value}M`;
     },
-    
+
     // 格式化带宽差异显示
     formatBandwidthDifference(diff) {
       if (diff === 0 || diff === undefined || diff === null) return '-';
       const prefix = diff > 0 ? '+' : '';
       return `${prefix}${diff}M`;
     },
-    
+
     // 格式化货币显示
     formatCurrency(value) {
       if (value === 0 || value === undefined || value === null) return '-';
@@ -439,23 +460,24 @@ export default {
         maximumFractionDigits: 2
       }).format(value);
     },
-    
+
     // 格式化货币差异显示
     formatCurrencyDifference(diff) {
       if (diff === 0 || diff === undefined || diff === null) return '-';
       const prefix = diff > 0 ? '+' : '';
       return prefix + this.formatCurrency(diff).slice(1); // 去掉货币符号
     },
-    
+
     // 获取差异值的CSS类
     getDifferenceClass(diff) {
       if (!diff || diff === 0) return '';
       return diff > 0 ? 'positive-diff' : 'negative-diff';
     },
-    
+
     // 获取变化类型的排序值
     getChangeTypeSortValue(type) {
       const values = {
+        'payer_changed': 6,
         'added': 1,
         'removed': 2,
         'cost_changed': 3,
@@ -464,30 +486,34 @@ export default {
       };
       return values[type] || 0;
     },
-    
+
     // 获取指定变化类型的数量
     getChangeTypeCount(type) {
       if (type === 'cost_changed') {
-        return this.allChanges.filter(item => 
-          item.changeType === 'cost_changed' || 
-          item.changeType === 'cost_bandwidth_changed'
+        return this.allChanges.filter(item =>
+            item.changeType === 'cost_changed' ||
+            item.changeType === 'cost_bandwidth_changed'
         ).length;
       } else if (type === 'bandwidth_changed') {
-        return this.allChanges.filter(item => 
-          item.changeType === 'bandwidth_changed' || 
-          item.changeType === 'cost_bandwidth_changed'
+        return this.allChanges.filter(item =>
+            item.changeType === 'bandwidth_changed' ||
+            item.changeType === 'cost_bandwidth_changed'
+        ).length;
+      } else if (type === 'payer_changed') {
+        return this.allChanges.filter(item =>
+            item.changeType === 'payer_changed'
         ).length;
       }
       return this.allChanges.filter(item => item.changeType === type).length;
     },
-    
+
     // 获取指定变化类型的总费用
     getChangeTypeTotalCost(type, costField) {
       return this.allChanges
-        .filter(item => item.changeType === type)
-        .reduce((sum, item) => sum + (item[costField] || 0), 0);
+          .filter(item => item.changeType === type)
+          .reduce((sum, item) => sum + (item[costField] || 0), 0);
     },
-    
+
     // 获取总费用差异
     getTotalCostDifference() {
       return this.allChanges.reduce((sum, item) => sum + (item.costDifference || 0), 0);
